@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA — 3D Visual Artist</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Urbanist:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Buda:wght@300&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #000000;
+            --text: #ffffff;
+            --muted: #b1b1b1a0;
+            --accent: #8258ff;
+            --cyan: #ffffff;
+            --nav-bg: rgba(0, 0, 0, 0.139);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Urbanist', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- 1. CUSTOM CURSOR --- */
+        .cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border: 1px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+            transition: width 0.3s, height 0.3s, background 0.3s;
+        }
+
+        .cursor.hovered {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--cyan);
+            mix-blend-mode: normal;
+        }
+
+        /* --- 2. 3D BACKGROUND --- */
+        #webgl {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        /* --- 3. NAVIGATION --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--nav-bg);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            font-family: 'Syncopate', sans-serif;
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: var(--text);
+            text-decoration: none;
+            letter-spacing: 2px;
+            transition: all 1s ease;
+        }
+
+        .logo:hover {
+            color: #8158f1;
+            scale: 0.95;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        nav a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+        }
+
+        .hire-btn {
+            border: 1px solid var(--accent);
+            padding: 10px 24px;
+            border-radius: 30px;
+            color: var(--accent);
+            transition: 0.3s;
+            font-weight: 600;
+        }
+
+        .hire-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        .view{
+            text-decoration: none;
+        }
+        /* --- 4. SECTIONS --- */
+        section {
+            padding: 80px 8%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #home {
+            min-height: 100vh;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 150px;
+            gap: 40px;
+        }
+
+        .home-text {
+            flex: 1.5;
+        }
+
+        .hi {
+            font-family: "Buda", serif;
+            font-weight: 300;
+            font-size: clamp(2rem, 6vw, 4.5rem);
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .hi:nth-child(2) {
+            font-family: 'Syncopate', sans-serif;
+            font-size: clamp(3rem, 8vw, 6.5rem);
+        }
+
+        .name{
+            font-family: 'Syncopate', sans-serif;
+            font-size: clamp(3rem, 8vw, 6.5rem);
+            line-height: 1;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #fff, #8158f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: 0.4s ease;
+            position: relative;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .name:hover{
+            background-image: url('gif1.gif');
+            background-size: cover;
+            background-position: center;
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        #home p {
+            font-size: 1rem;
+            color: var(--muted);
+            max-width: 600px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+            min-height: 100px;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        /* --- Animation CSS Helpers --- */
+        .char {
+            opacity: 0;
+        }
+
+        /* For Typewriter */
+        .word {
+            opacity: 0;
+            display: inline-block;
+            transform: translateY(20px);
+        }
+
+        /* For Fade In */
+
+        /* Home Image */
+        .home-img-container {
+            margin-top: -80px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            perspective: 1000px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .home-img {
+            width: 100%;
+            max-width: 450px;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.5s, border-color 0.5s;
+        }
+
+        .home-img:hover {
+            transform: scale(1.05) rotateY(5deg) rotateX(5deg);
+            box-shadow: 20px 20px 20px rgba(126, 126, 126, 0.279);
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* ABOUT SECTION */
+        #about {
+            text-align: center;
+            align-items: center;
+            padding: 120px 8%;
+        }
+
+        .about-text {
+            max-width: 800px;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: var(--muted);
+        }
+
+        /* WORK & GRID */
+        #port {
+            align-self: center;
+            font-family: 'Syncopate', sans-serif;
+            font-size: clamp(3rem, 8vw, 6.5rem);
+
+        }
+
+        .category-title {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 2.2rem;
+            margin-top: 100px;
+            margin-bottom: 50px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .category-title::before {
+            content: '';
+            width: 40px;
+            height: 2px;
+            background: var(--accent);
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 40px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+            transition: transform 0.4s, border-color 0.4s;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-12px);
+            border-color: var(--cyan);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.05);
+        }
+
+        .thumb {
+            width: 100%;
+            height: 320px;
+            object-fit: cover;
+            transition: transform 0.6s ease-out;
+            display: block;
+        }
+
+        .card:hover .thumb {
+            transform: scale(1.06);
+        }
+
+        .meta {
+            padding: 22px;
+        }
+
+        .meta h3 {
+            font-family: 'Syncopate';
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .meta span {
+            font-size: 0.85rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #grid-posters .thumb {
+            height: 450px;
+            object-fit: cover;
+            object-position: top;
+        }
+
+        #grid-thumbnails {
+            grid-template-columns: repeat(auto-fill, minmax(550px, 1fr));
+        }
+
+        #grid-thumbnails .thumb {
+            height: 310px;
+            object-fit: cover;
+        }
+
+        /* CONTACT */
+        #contact-link-section {
+            min-height: 70vh;
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to top, rgba(0, 255, 255, 0.05), transparent);
+        }
+
+        .contact-btn {
+            font-size: 2.2rem;
+            padding: 25px 50px;
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 60px;
+            margin-top: 40px;
+            cursor: pointer;
+            font-family: 'Syncopate';
+            transition: all 0.3s;
+        }
+
+        .contact-btn:hover {
+            background: var(--text);
+            color: black;
+            border-color: white;
+            transform: scale(1.05);
+        }
+
+        /* VIEWER & OVERLAYS */
+        .viewer {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.96);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s;
+        }
+
+        .viewer.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+
+        .slide-container {
+            width: 90%;
+            height: 75vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .slide-content {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .slide-img {
+            max-height: 65vh;
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .slide-details {
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .slide-details h2 {
+            font-family: 'Syncopate';
+            margin-bottom: 8px;
+            font-size: 1.5rem;
+        }
+
+        .slide-details p {
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 220;
+            transition: 0.3s;
+        }
+
+        .close-btn:hover {
+            background: var(--accent);
+        }
+
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: white;
+            font-size: 4rem;
+            cursor: pointer;
+            opacity: 0.4;
+            z-index: 210;
+            transition: 0.3s;
+        }
+
+        .nav-arrow:hover {
+            opacity: 1;
+            color: var(--cyan);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .prev {
+            left: 30px;
+        }
+
+        .next {
+            right: 30px;
+        }
+
+        .contact-page {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: #050507;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s;
+        }
+
+        .contact-page.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+
+        .contact-content {
+            text-align: center;
+            width: 100%;
+            max-width: 1000px;
+            padding: 20px;
+        }
+
+        .contact-title {
+            font-family: 'Syncopate';
+            font-size: 3rem;
+            margin-bottom: 50px;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .social-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            font-family: 'Syncopate';
+            font-size: 1.1rem;
+        }
+
+        .social-card.insta:hover {
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            border-color: transparent;
+        }
+
+        .social-card.yt:hover {
+            background: #FF0000;
+            border-color: transparent;
+        }
+
+        .social-card.wa:hover {
+            background: #25D366;
+            border-color: transparent;
+        }
+
+        .social-card.mail:hover {
+            background: #EA4335;
+            border-color: transparent;
+        }
+
+        .social-card:hover {
+            transform: translateY(-10px) scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            #home {
+                flex-direction: column;
+                text-align: center;
+                justify-content: center;
+            }
+
+            .home-img-container {
+                margin-top: 40px;
+            }
+
+            .home-img {
+                max-width: 80%;
+            }
+
+            #home h1 {
+                font-size: 3rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .thumb {
+                height: 280px;
+            }
+
+            #grid-posters .thumb {
+                height: 400px;
+            }
+
+            .contact-title {
+                font-size: 2rem;
+            }
+
+            .social-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cursor"></div>
+    <canvas id="webgl"></canvas>
+
+    <header>
+        <a href="#home" class="logo">smyth</a>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#work">Work</a></li>
+                <li><a href="#" class="hire-btn" onclick="openContactPage(event)">Hire Me</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home">
+            <div class="home-text">
+                <h1 class="hi">HI</h1>
+                <h1 class="hi">I'am</h1>
+                <h1 class="name">Smyth</h1>
+
+                <p id="home-desc">
+                    “I’m a graphic designer focused on creating visuals that are clean, modern and
+                    emotionally engaging. My work includes thumbnails, posters, branding, UI graphics and social media
+                    content — all designed with precision, color psychology and storytelling.”
+                </p>
+
+                <a href="#work" class="hire-btn anim-text view"
+                    style="display:inline-block; margin-top:20px; font-size:1.1rem;">View My Portfolio</a>
+            </div>
+
+            <div class="home-img-container">
+                <img src="face.jpg" alt="Smyth 3D Portrait" class="home-img">
+            </div>
+        </section>
+
+        <section id="about">
+            <h2 style="font-family:'Syncopate'; font-size:3rem; margin-bottom:20px; color:var(--cyan)">The Vision</h2>
+            <div class="about-text">
+                <p id="vision-desc">
+                    “In a visual world, clarity matters more than ever.
+                    I design clean, modern and purposeful graphics that communicate instantly.
+                    Every project is shaped with intention—crafted to attract attention, deliver meaning
+                    and strengthen the brand behind it.
+                    Simple, powerful, unforgettable.”
+                </p>
+            </div>
+        </section>
+
+        <section id="work">
+            <h1 id="port">PORTFOLIO</h1>
+            <div class="category-title">01 / Thumbnails</div>
+            <div class="grid" id="grid-thumbnails"></div>
+
+            <div class="category-title">02 / Posters</div>
+            <div class="grid" id="grid-posters"></div>
+
+            <div class="category-title">03 / Social Media</div>
+            <div class="grid" id="grid-social"></div>
+        </section>
+
+        <section id="contact-link-section">
+            <h2 style="font-family:'Syncopate'; font-size:2.5rem;">Let's Create<br>Something Epic</h2>
+            <button class="contact-btn" onclick="openContactPage(event)">Get In Touch</button>
+            <p style="margin-top:30px; color:var(--muted);">Design by Two Bros</p>
+        </section>
+    </main>
+
+    <div class="viewer" id="viewer">
+        <button class="close-btn" id="closeViewer">✕</button>
+        <button class="nav-arrow prev" id="btnPrev">←</button>
+        <div class="slide-container">
+            <div class="slide-content" id="slideContent">
+                <img id="vImg" class="slide-img" src="" alt="">
+                <div class="slide-details">
+                    <h2 id="vTitle">Title</h2>
+                    <p id="vDesc">Desc</p>
+                </div>
+            </div>
+        </div>
+        <button class="nav-arrow next" id="btnNext">→</button>
+    </div>
+
+    <div class="contact-page" id="contactPage">
+        <button class="close-btn" id="closeContact">✕</button>
+        <div class="contact-content">
+            <h2 class="contact-title">Connect With Me</h2>
+            <div class="social-grid">
+                <a href="https://www.instagram.com/ig.smyth" class="social-card insta"><span>Instagram</span></a>
+                <a href="https://wa.me/qr/QVDQM6N6J5C4C1" class="social-card wa"><span>WhatsApp</span></a>
+                <a href="mailto:smythworksbase@gmail.com" class="social-card mail"><span>Gmail</span></a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        // REGISTER SCROLLTRIGGER
+        gsap.registerPlugin(ScrollTrigger);
+
+        // ==========================================
+        // TEXT ANIMATION LOGIC (NEW)
+        // ==========================================
+
+        // 1. Home Page: Typing Effect (Letter by Letter)
+        const homeDesc = document.getElementById('home-desc');
+        const homeText = homeDesc.innerText;
+        homeDesc.innerHTML = homeText.split('').map(char => `<span class="char">${char}</span>`).join('');
+
+        gsap.to('#home-desc .char', {
+            opacity: 1,
+            duration: 0.05,
+            stagger: 0.01, // Adjust speed of typing here
+            ease: "none",
+            delay: 0.2 // Wait 1 sec before starting
+        });
+
+        // 2. About Page: Fade In (Word by Word / Line effect)
+        const visionDesc = document.getElementById('vision-desc');
+        const visionText = visionDesc.innerText;
+        // Split by words to simulate lines fading in
+        visionDesc.innerHTML = visionText.split(' ').map(word => `<span class="word">${word}&nbsp;</span>`).join('');
+
+        gsap.to('#vision-desc .word', {
+            scrollTrigger: {
+                trigger: "#about",
+                start: "top 80%", // Start when top of about section hits 80% of viewport
+            },
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.02, // Speed of fade in
+            ease: "power2.out"
+        });
+
+
+        // ==========================================
+        // 1. THREE.JS BACKGROUND
+        // ==========================================
+        const canvas = document.querySelector('#webgl');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050507, 0.04);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        const geometry = new THREE.PlaneGeometry(60, 60, 50, 50);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xE6CCFF, wireframe: true, transparent: true, opacity: 0.15
+        });
+        const plane = new THREE.Mesh(geometry, material);
+        scene.add(plane);
+        plane.rotation.x = -Math.PI / 2 + 0.3;
+        plane.position.y = -8; plane.position.z = -10; camera.position.z = 5;
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.004;
+            const positionAttribute = geometry.attributes.position;
+            const vertex = new THREE.Vector3();
+            for (let i = 0; i < positionAttribute.count; i++) {
+                vertex.fromBufferAttribute(positionAttribute, i);
+                vertex.z = Math.sin(vertex.x * 0.3 + time) * 2 + Math.sin(vertex.y * 0.2 + time) * 1.5;
+                positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
+            }
+            positionAttribute.needsUpdate = true;
+            plane.rotation.z += 0.001;
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ==========================================
+        // 2. PROJECT DATA & GRID (SEQUENTIAL UPLOAD)
+        // ==========================================
+
+        // Total images kitni hain (yahan 51 maana gaya hai)
+        const totalImages = 51;
+
+        const projects = Array.from({ length: totalImages }).map((_, i) => {
+            const imgNum = i + 1; // Image number (1, 2, 3...)
+            let cat = 'Thumbnail'; // Default category
+
+            // --- YAHAN SET KAREIN KI KAUNSI PHOTO KAHAN JAYEGI ---
+
+            if (imgNum <= 17) {
+                cat = 'Thumbnail';      // Photo 1 se 17 tak
+            } else if (imgNum <= 34) {
+                cat = 'Poster';         // Photo 18 se 34 tak
+            } else {
+                cat = 'Social Media';   // Photo 35 se end tak
+            }
+
+            // --- END OF LOGIC ---
+
+            let width = 800; let height = 600;
+            if (cat === 'Poster') { height = 1000; }
+
+            return {
+                id: i,
+                title: `${cat} No. ${imgNum}`, // Title example: Thumbnail No. 1
+                category: cat,
+                desc: `This is a high-quality ${cat} design project number ${imgNum}.`,
+
+                // Ye folder se 1.jpg, 2.jpg... line se uthayega
+                img: `images/${imgNum}.jpg`
+            };
+        });
+
+        const grids = {
+            'Thumbnail': document.getElementById('grid-thumbnails'),
+            'Poster': document.getElementById('grid-posters'),
+            'Social Media': document.getElementById('grid-social')
+        };
+
+        projects.forEach((p, index) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <img class="thumb" loading="lazy" src="${p.img}" alt="${p.title}">
+                <div class="meta">
+                    <h3>${p.title}</h3>
+                    <span>${p.category}</span>
+                </div>
+            `;
+
+            card.addEventListener('click', () => openGallery(index));
+
+            if (grids[p.category]) grids[p.category].appendChild(card);
+        });
+        // ==========================================
+        // 3. GALLERY LOGIC (CATEGORY BASED NAVIGATION)
+        // ==========================================
+        const viewer = document.getElementById('viewer');
+        const slideContent = document.getElementById('slideContent');
+        const vElements = {
+            img: document.getElementById('vImg'),
+            title: document.getElementById('vTitle'),
+            desc: document.getElementById('vDesc')
+        };
+
+        // New variables to handle specific categories
+        let currentCategoryList = []; // Sirf filtered projects yahan rahenge
+        let currentIndexInList = 0;   // Filtered list ka index
+        let isAnimating = false;
+
+        function updateSlide() {
+            // Ab hum filtered list se data uthayenge
+            const p = currentCategoryList[currentIndexInList];
+            vElements.img.src = p.img;
+            vElements.title.innerText = p.title;
+            vElements.desc.innerText = p.desc;
+        }
+
+        function openGallery(globalIndex) {
+            // 1. Pata karo kaunsa project click hua
+            const clickedProject = projects[globalIndex];
+            const clickedCategory = clickedProject.category;
+
+            // 2. Sirf us category ke projects ki alag list banao
+            currentCategoryList = projects.filter(p => p.category === clickedCategory);
+
+            // 3. Pata karo ki clicked project is nayi list me kaunse number par hai
+            currentIndexInList = currentCategoryList.findIndex(p => p.id === clickedProject.id);
+
+            // 4. Slide update karo aur open karo
+            updateSlide();
+            viewer.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            gsap.fromTo(slideContent, { scale: 0.95, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4 });
+        }
+
+        function closeGallery() {
+            viewer.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function changeSlide(dir) {
+            if (isAnimating) return;
+            isAnimating = true;
+            const direction = dir === 'next' ? 1 : -1;
+
+            gsap.to(slideContent, {
+                x: -100 * direction, opacity: 0, duration: 0.25, ease: "power1.in",
+                onComplete: () => {
+                    // Logic: Ab hum 'currentCategoryList' ki length use karenge
+                    currentIndexInList = (currentIndexInList + direction + currentCategoryList.length) % currentCategoryList.length;
+
+                    updateSlide(); // Update content
+
+                    gsap.set(slideContent, { x: 100 * direction });
+                    gsap.to(slideContent, { x: 0, opacity: 1, duration: 0.3, ease: "power2.out", onComplete: () => isAnimating = false });
+                }
+            });
+        }
+
+        // Event Listeners same rahenge
+        document.getElementById('closeViewer').addEventListener('click', closeGallery);
+        document.getElementById('btnNext').addEventListener('click', () => changeSlide('next'));
+        document.getElementById('btnPrev').addEventListener('click', () => changeSlide('prev'));
+
+        document.addEventListener('keydown', e => {
+            if (viewer.classList.contains('active')) {
+                if (e.key === 'Escape') closeGallery();
+                if (e.key === 'ArrowRight') changeSlide('next');
+                if (e.key === 'ArrowLeft') changeSlide('prev');
+            }
+            if (contactPage.classList.contains('active') && e.key === 'Escape') closeContactPage();
+        });
+
+        // ==========================================
+        // 4. CONTACT PAGE LOGIC
+        // ==========================================
+        const contactPage = document.getElementById('contactPage');
+        const closeContactBtn = document.getElementById('closeContact');
+        const socialCards = document.querySelectorAll('.social-card');
+
+        function openContactPage(e) {
+            if (e) e.preventDefault();
+            contactPage.classList.add('active'); document.body.style.overflow = 'hidden';
+            gsap.fromTo(socialCards, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "back.out(1.7)" });
+        }
+        function closeContactPage() {
+            contactPage.classList.remove('active'); document.body.style.overflow = '';
+        }
+        closeContactBtn.addEventListener('click', closeContactPage);
+
+        // ==========================================
+        // 5. CURSOR & ANIMATIONS
+        // ==========================================
+        const cursor = document.querySelector('.cursor');
+        document.addEventListener('mousemove', e => { gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1 }); });
+        document.querySelectorAll('a, button, .card, .social-card').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
+        });
+        gsap.from(".anim-text", { y: 50, opacity: 0, duration: 1, stagger: 0.15, ease: "power3.out" });
+
+    </script>
+</body>
+
+</html>
