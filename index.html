@@ -584,43 +584,125 @@
             transform: translateY(-10px) scale(1.05);
         }
 
+     /* =========================================
+           MOBILE RESPONSIVE (SMALL SCREENS) - MERGED
+           ========================================= */
         @media (max-width: 768px) {
+            
+            /* Hide custom cursor on mobile (touch devices don't need it) */
+            .cursor {
+                display: none;
+            }
+
+            /* 1. HOME PAGE CENTER ALIGNMENT */
             #home {
-                flex-direction: column;
-                text-align: center;
+                flex-direction: column; /* Upar-niche stack karo */
+                text-align: center;     /* Text center */
                 justify-content: center;
+                padding-top: 100px;
+                gap: 30px;
+            }
+
+            .home-text {
+                width: 100%;
+                order: 1; /* Text pehle dikhega */
             }
 
             .home-img-container {
+                width: 100%;
+                order: 2; /* Image baad me dikhegi */
+                justify-content: center; /* Image ko center me lao */
                 margin-top: 40px;
             }
 
             .home-img {
-                max-width: 80%;
+                max-width: 60%; /* Image ka size adjust kiya */
             }
 
+            /* Font Sizes Fix */
             #home h1 {
                 font-size: 3rem;
             }
 
-            .grid {
-                grid-template-columns: 1fr;
+            /* 2. CENTER TITLES */
+            .category-title {
+                justify-content: center; /* Heading center */
+                font-size: 2rem;
+            }
+            #port {
+                font-size: 3rem; /* Portfolio title size */
             }
 
+            /* 3. GRID SYSTEM FOR MOBILE */
+            .grid {
+                grid-template-columns: 1fr; /* Default grid single column */
+            }
+
+            /* Thumbnails - 2 Columns (Chote dikhenge) */
+            #grid-thumbnails {
+                grid-template-columns: repeat(1, 1fr) !important; 
+                gap: 15px;
+            }
+
+            #grid-thumbnails .thumb {
+                height: 200px !important; /* Height kam kar di */
+                object-fit: cover;
+            }
+
+            /* Posters & Social - 1 Column (Bade dikhenge) */
+            #grid-posters, #grid-social {
+                grid-template-columns: 1fr !important;
+            }
+            
+            #grid-posters .thumb {
+                height: 400px; /* Poster lamba rahega */
+            }
+
+            /* General Thumb Height */
             .thumb {
                 height: 280px;
             }
 
-            #grid-posters .thumb {
-                height: 400px;
-            }
-
+            /* Contact Page Adjustments */
             .contact-title {
                 font-size: 2rem;
             }
 
             .social-grid {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr 1fr; /* 2 columns for social buttons */
+            }
+        }
+        /* =========================================
+           MOBILE NAVIGATION FIX
+           ========================================= */
+        @media (max-width: 600px) {
+            
+            /* 1. Header ki side padding kam karein */
+            header {
+                padding: 15px 20px; /* Side se space kam kiya */
+            }
+
+            /* 2. Logo ka size thoda chota karein */
+            .logo {
+                font-size: 1.2rem; 
+            }
+
+            /* 3. Links ke beech ka gap kam karein */
+            nav ul {
+                gap: 12px; /* Pehle 30px tha, ab 12px kar diya */
+            }
+
+            /* 4. Text size chota karein */
+            nav a {
+                font-size: 0.75rem; /* Text size adjust kiya */
+                letter-spacing: 0.5px;
+            }
+
+            /* 5. Hire Me Button ka size adjust karein */
+            .hire-btn {
+                padding: 6px 12px; /* Padding kam ki */
+                font-size: 0.7rem; /* Button text chota kiya */
+                border-radius: 20px;
             }
         }
     </style>
@@ -810,8 +892,8 @@
         // 2. PROJECT DATA & GRID (SEQUENTIAL UPLOAD)
         // ==========================================
 
-        // Total images kitni hain (yahan 51 maana gaya hai)
-        const totalImages = 51;
+        // Total images kitni hain (yahan 25 maana gaya hai)
+        const totalImages = 25;
 
         const projects = Array.from({ length: totalImages }).map((_, i) => {
             const imgNum = i + 1; // Image number (1, 2, 3...)
@@ -819,12 +901,12 @@
 
             // --- YAHAN SET KAREIN KI KAUNSI PHOTO KAHAN JAYEGI ---
 
-            if (imgNum <= 17) {
-                cat = 'Thumbnail';      // Photo 1 se 17 tak
-            } else if (imgNum <= 34) {
-                cat = 'Poster';         // Photo 18 se 34 tak
+            if (imgNum <= 10) {
+                cat = 'Thumbnail';      // Photo 1 se 10 tak
+            } else if (imgNum <=17 ) {
+                cat = 'Poster';         // Photo 11 se 17 tak
             } else {
-                cat = 'Social Media';   // Photo 35 se end tak
+                cat = 'Social Media';   // Photo 18 se 25 end tak
             }
 
             // --- END OF LOGIC ---
