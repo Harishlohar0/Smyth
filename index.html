@@ -271,9 +271,10 @@
         #port {
             align-self: center;
             font-family: 'Syncopate', sans-serif;
-            font-size: clamp(3rem, 8vw, 6.5rem);
+            font-size: clamp(2rem, 8vw, 6.5rem);
 
         }
+
 
         .category-title {
             font-family: 'Syncopate', sans-serif;
@@ -390,7 +391,9 @@
             border-color: white;
             transform: scale(1.05);
         }
-
+        #create{
+            font-size: 2.5rem;
+        }
         /* VIEWER & OVERLAYS */
         .viewer {
             position: fixed;
@@ -645,7 +648,9 @@
             }
 
             #grid-thumbnails .thumb {
-                height: 200px !important; /* Height kam kar di */
+               width: 100%;
+                height: auto !important; /* Height auto karni padegi */
+                aspect-ratio: 16 / 9;    /* Ye photo ko 16:9 me lock kar dega */
                 object-fit: cover;
             }
 
@@ -675,8 +680,31 @@
         /* =========================================
            MOBILE NAVIGATION FIX
            ========================================= */
+            @media (max-width: 450px) { 
+           .nav-arrow {
+            top: 80%;
+           }
+            .social-grid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+         .social-card {
+          width: 100%;
+        }
+        }
         @media (max-width: 600px) {
-            
+            #port {
+            align-self: center;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 1.8rem;
+
+        }
+            #create{
+                font-size: 1.8rem;
+            }
             /* 1. Header ki side padding kam karein */
             header {
                 padding: 15px 20px; /* Side se space kam kiya */
@@ -818,7 +846,7 @@
         </section>
 
         <section id="contact-link-section">
-            <h2 style="font-family:'Syncopate'; font-size:2.5rem;">Let's Create<br>Something Epic</h2>
+            <h2 id="create" style="font-family:'Syncopate';">Let's Create<br>Something Epic</h2>
             <button class="contact-btn" onclick="openContactPage(event)">Get In Touch</button>
             <p style="margin-top:30px; color:var(--muted);">Design by Two Bros</p>
         </section>
