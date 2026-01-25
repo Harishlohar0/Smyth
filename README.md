@@ -19,7 +19,7 @@ This project was created as a real-world practice project focusing on clean UI, 
 ## 🔗 Live Website
 
 👉 **Visit Here:**  
-https://your-username.github.io/portfolio-website/
+[Visit->>>>>>>>](https://harvixx.github.io/Smyth/)
 
 ---
 
